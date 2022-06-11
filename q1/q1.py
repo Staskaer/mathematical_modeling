@@ -10,8 +10,9 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from sklearn.preprocessing import MinMaxScaler
 from functools import reduce
+from scipy.stats import pearsonr
 
-file = r"projects\python程序\数学建模\a.xlsx"
+file = r"projects\python程序\数学建模\mathematical_modeling\a.xlsx"
 
 '''
 #这部分代码弃用
@@ -181,6 +182,7 @@ def feature_select(X, y):
     '''（一）卡方(Chi2)检验'''
     # 先去除nan
     X = X.fillna(0)
+    # raw是原始数据，用于记录列号和名字
     raw = deepcopy(X)
 
     # 归一化处理
@@ -193,14 +195,28 @@ def feature_select(X, y):
 
     # 下面的部分是显示这些特征对应的类别
     scores = selector.scores_
-
     indices = np.argsort(scores)[::-1]
     k_best_list = []
-
     for i in range(10):
         k_best_feature = raw.columns[indices[i]]
         k_best_list.append(k_best_feature)
     print('使用卡方检验得到的最优的15个特征：', k_best_list)
+
+    # 皮尔逊（这部分我看知乎里有提到，卡方对分类，皮尔逊对回归）
+    # 而这个正是一个回归问题，所以把这个也用上
+
+    selector = SelectKBest(lambda X, Y: np.array(
+        list(map(lambda x: pearsonr(x, Y), X.T))).T[0], k=15)
+    X_new = selector.fit_transform(X, y.astype('int'))
+
+    # 下面的部分是显示这些特征对应的类别
+    scores = selector.scores_
+    indices = np.argsort(scores)[::-1]
+    k_best_list = []
+    for i in range(10):
+        k_best_feature = raw.columns[indices[i]]
+        k_best_list.append(k_best_feature)
+    print('使用皮尔逊检验得到的最优的15个特征：', k_best_list)
 
 
 if __name__ == "__main__":
