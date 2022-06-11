@@ -1,5 +1,5 @@
 
-# 依赖项：pandas numpy matplotlib sklearn
+# 依赖项：pandas numpy matplotlib sklearn minepy
 
 from copy import deepcopy
 import pandas as pd
@@ -11,58 +11,9 @@ from sklearn.feature_selection import chi2
 from sklearn.preprocessing import MinMaxScaler
 from functools import reduce
 from scipy.stats import pearsonr
+from minepy import MINE
 
 file = r"projects\python程序\数学建模\mathematical_modeling\a.xlsx"
-
-'''
-#这部分代码弃用
-
-def get_szjj():
-    # 打开数字经济板块信息并提取出所有的数据
-    with open(file, 'rb') as f:
-        df = pd.read_excel(f, sheet_name=3)
-        # 除去最后两行不必要的信息
-        df = df.iloc[:-2, :]
-        return df
-
-
-def get_jszb():
-    # 打开技术指标板块并提取出所有的数据
-    with open(file, 'rb') as f:
-        df = pd.read_excel(f, sheet_name=4)
-        return df
-
-
-def get_gjsc():
-    # 获取国际市场数据
-    with open(file, 'rb') as f:
-        df = pd.read_excel(f, sheet_name=5)
-        return df
-
-
-def get_hl():
-    # 获取汇率相关数据
-    with open(file, 'rb') as f:
-        df = pd.read_excel(f, sheet_name=6)
-        return df
-
-
-def get_qt():
-    # 获取其他板块的信息
-    with open(file, 'rb') as f:
-        df = pd.read_excel(f, sheet_name=7)
-        return df
-
-
-def match(szjj, jszb):
-    # 因为数字经济板块和技术指标中的时间不匹配
-    # 并且技术指标中数据明显少很多，因此将提取出匹配的数据用于处理
-    szjj['时间'] = szjj['时间'].map(lambda x: str(x).split(" ")[0])
-    jszb['时间'] = jszb['时间'].map(lambda x: str(x).split(" ")[0])
-    # 使用内连接的方式来获取将其组装成整体
-    result = pd.merge(szjj, jszb, on="时间")
-
-'''
 
 
 def get_data(type_data=False):
@@ -166,17 +117,6 @@ def get_X_y(data, y_type=0):
     return X, y
 
 
-def compute_phi():
-
-    # 计算相关系数
-    pass
-
-
-def compute_gain():
-    # 信息增益或信息熵
-    pass
-
-
 def feature_select(X, y):
     # 特征提取方法
     '''（一）卡方(Chi2)检验'''
@@ -202,6 +142,7 @@ def feature_select(X, y):
         k_best_list.append(k_best_feature)
     print('使用卡方检验得到的最优的15个特征：', k_best_list)
 
+    '''（二）皮尔逊'''
     # 皮尔逊（这部分我看知乎里有提到，卡方对分类，皮尔逊对回归）
     # 而这个正是一个回归问题，所以把这个也用上
 
@@ -218,11 +159,59 @@ def feature_select(X, y):
         k_best_list.append(k_best_feature)
     print('使用皮尔逊检验得到的最优的15个特征：', k_best_list)
 
+    '''（三）基于互信息'''
+    def mic(x, y):
+        # 计算函数
+        m = MINE()
+        m.compute_score(x, y)
+        return (m.mic(), 0.5)
+
+    selector = SelectKBest(lambda X, Y: np.array(
+        list(map(lambda x: mic(x, Y), X.T))).T[0], k=15)
+    X_new = selector.fit_transform(X, y.astype('int'))
+
+    # 下面的部分是显示这些特征对应的类别
+    scores = selector.scores_
+    indices = np.argsort(scores)[::-1]
+    k_best_list = []
+    for i in range(10):
+        k_best_feature = raw.columns[indices[i]]
+        k_best_list.append(k_best_feature)
+    print('使用互信息得到的最优的15个特征：', k_best_list)
+
+
+def parse_analysis(data):
+    print("分析哪些特征跟开盘价最相关:\n")
+    X, y = get_X_y(data=data, y_type=0)
+    feature_select(X, y)
+
+    print("\n分析哪些特征跟收盘价最相关:\n")
+    X, y = get_X_y(data=data, y_type=1)
+    feature_select(X, y)
+
+    print("\n分析哪些特征跟最高价最相关:\n")
+    X, y = get_X_y(data=data, y_type=2)
+    feature_select(X, y)
+
+    print("\n分析哪些特征跟最低价最相关:\n")
+    X, y = get_X_y(data=data, y_type=3)
+    feature_select(X, y)
+
+    print("\n分析哪些特征跟交易量最相关:\n")
+    X, y = get_X_y(data=data, y_type=4)
+    feature_select(X, y)
+
+    print("\n分析哪些特征跟交易价最相关:\n")
+    X, y = get_X_y(data=data, y_type=5)
+    feature_select(X, y)
+
 
 if __name__ == "__main__":
     data, szjj = get_data()
-    X, y = get_X_y(data=data)
-    feature_select(X, y)
+    parse_analysis(data)
+    # print("分析哪些特征跟交易量最相关")
+    # X, y = get_X_y(data=data, y_type=4)
+    # feature_select(X, y)
 
     # print(data.columns.values)
 
