@@ -187,8 +187,8 @@ def feature_select(X, y):
     scalar = MinMaxScaler()
     X = scalar.fit_transform(X)
 
-    # 此处是调用卡方检测来挑选出最优的10个特征
-    selector = SelectKBest(chi2, k=10)
+    # 此处是调用卡方检测来挑选出最优的15个特征
+    selector = SelectKBest(chi2, k=15)
     X_new = selector.fit_transform(X, y.astype('int'))
 
     # 下面的部分是显示这些特征对应的类别
@@ -200,7 +200,7 @@ def feature_select(X, y):
     for i in range(10):
         k_best_feature = raw.columns[indices[i]]
         k_best_list.append(k_best_feature)
-    print('k_best_list:', k_best_list)
+    print('使用卡方检验得到的最优的15个特征：', k_best_list)
 
 
 if __name__ == "__main__":
