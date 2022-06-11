@@ -187,9 +187,11 @@ def feature_select(X, y):
     scalar = MinMaxScaler()
     X = scalar.fit_transform(X)
 
+    # 此处是调用卡方检测来挑选出最优的10个特征
     selector = SelectKBest(chi2, k=10)
     X_new = selector.fit_transform(X, y.astype('int'))
 
+    # 下面的部分是显示这些特征对应的类别
     scores = selector.scores_
 
     indices = np.argsort(scores)[::-1]
