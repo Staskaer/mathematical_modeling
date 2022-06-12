@@ -119,6 +119,7 @@ def get_X_y(data, y_type=0):
 
 def feature_select(X, y):
     # 特征提取方法
+    result = {}
     '''（一）卡方(Chi2)检验'''
     # 先去除nan
     X = X.fillna(0)
@@ -136,11 +137,12 @@ def feature_select(X, y):
     # 下面的部分是显示这些特征对应的类别
     scores = selector.scores_
     indices = np.argsort(scores)[::-1]
-    k_best_list = []
-    for i in range(10):
+    k_best_list_k = []
+    for i in range(15):
         k_best_feature = raw.columns[indices[i]]
-        k_best_list.append(k_best_feature)
-    print('使用卡方检验得到的最优的15个特征：', k_best_list)
+        result[k_best_feature] = result.get(k_best_feature, 0)+15-i
+        k_best_list_k.append(k_best_feature)
+    print('使用卡方检验得到的最优的15个特征：', k_best_list_k)
 
     '''（二）皮尔逊'''
     # 皮尔逊（这部分我看知乎里有提到，卡方对分类，皮尔逊对回归）
@@ -153,11 +155,12 @@ def feature_select(X, y):
     # 下面的部分是显示这些特征对应的类别
     scores = selector.scores_
     indices = np.argsort(scores)[::-1]
-    k_best_list = []
-    for i in range(10):
+    k_best_list_p = []
+    for i in range(15):
         k_best_feature = raw.columns[indices[i]]
-        k_best_list.append(k_best_feature)
-    print('使用皮尔逊检验得到的最优的15个特征：', k_best_list)
+        result[k_best_feature] = result.get(k_best_feature, 0)+15-i
+        k_best_list_p.append(k_best_feature)
+    print('使用皮尔逊检验得到的最优的15个特征：', k_best_list_p)
 
     '''（三）基于互信息'''
     def mic(x, y):
@@ -173,11 +176,17 @@ def feature_select(X, y):
     # 下面的部分是显示这些特征对应的类别
     scores = selector.scores_
     indices = np.argsort(scores)[::-1]
-    k_best_list = []
-    for i in range(10):
+    k_best_list_h = []
+    for i in range(15):
         k_best_feature = raw.columns[indices[i]]
-        k_best_list.append(k_best_feature)
-    print('使用互信息得到的最优的15个特征：', k_best_list)
+        result[k_best_feature] = result.get(k_best_feature, 0)+15-i
+        k_best_list_h.append(k_best_feature)
+    print('使用互信息得到的最优的15个特征：', k_best_list_h)
+
+    print("========最终投票结果（前6）==========")
+    result = sorted(result.items(), key=lambda x: x[1], reverse=True)
+    print(result[0:6])
+    #这个排序其实写的不对，后面再改改看看#
 
 
 def parse_analysis(data):
