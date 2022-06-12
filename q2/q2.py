@@ -1,3 +1,4 @@
+from turtle import color
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -5,7 +6,7 @@ import math
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from keras.models import load_model
 from sklearn.metrics import mean_squared_error
 from functools import reduce
@@ -89,7 +90,7 @@ def get_train_test(dataset):
 def train_and_save(dataset):
 
     trainX, trainY, testX, testY = get_train_test(dataset)
-    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler = StandardScaler()
     trainX = scaler.fit_transform(trainX)
     # trainY = scaler.fit_transform(trainY)
     # testX = scaler.fit_transform(testX)
@@ -100,8 +101,8 @@ def train_and_save(dataset):
 
     # LSTM网络模型
     model = Sequential()
-    model.add(LSTM(4))
-    model.add(Dense(1))
+    model.add(LSTM(2, use_bias=False,))
+    model.add(Dense(1, use_bias=False))
     model.compile(loss='mean_squared_error', optimizer='adam')
     model.fit(trainX, trainY, epochs=100, batch_size=1, verbose=2)
 
@@ -113,22 +114,22 @@ def test(dataset):
     model = load_model(
         r"projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
     trainX, trainY, testX, testY = get_train_test(dataset)
-
-    scaler = MinMaxScaler(feature_range=(0, 1))
+    # 上面这一堆是对数据进行处理，忘了封装了，只能这样子单独处理了
+    scaler = StandardScaler()
     testX = scaler.fit_transform(testX)
     trainX = scaler.fit_transform(trainX)
-    trainPredict = model.predict(trainX)
-    testPredict = model.predict(testX)
-
     testX = np.array(testX)
     testX = testX.reshape((testX.shape[0], 1, testX.shape[1]))
     trainX = np.array(trainX)
     trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
+    # 预测
+    trainPredict = model.predict(trainX)
+    testPredict = model.predict(testX)
 
-    trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
-    print('Train Score: %.2f RMSE'.format(trainScore))
-    testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
-    print('Test Score: %.2f RMSE'.format(testScore))
+    # trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
+    # print('Train Score: %.2f RMSE'.format(trainScore))
+    # testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
+    # print('Test Score: %.2f RMSE'.format(testScore))
     # shift train predictions for plotting
     trainPredictPlot = np.empty_like(dataset)
     trainPredictPlot[:, :] = np.nan
@@ -140,8 +141,8 @@ def test(dataset):
                     1:len(dataset)-1, :] = testPredict
     # plot baseline and predictions
     # plt.plot(scaler.inverse_transform(dataset))
-    plt.plot(trainPredictPlot)
-    plt.plot(testPredictPlot)
+    plt.plot(trainPredictPlot, color="r")
+    plt.plot(testPredictPlot, color="g")
     plt.show()
 
 
@@ -153,5 +154,6 @@ if __name__ == "__main__":
     dataset = dataset.astype("float32")
 
     train_and_save(dataset)  # 训练模型并保存
+    test(dataset)
 
     # 获取数据集和验证集
