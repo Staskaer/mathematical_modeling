@@ -5,7 +5,6 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from sklearn.preprocessing import MinMaxScaler
@@ -13,7 +12,7 @@ from functools import reduce
 from scipy.stats import pearsonr
 from minepy import MINE
 
-file = r"projects\python程序\数学建模\mathematical_modeling\a.xlsx"
+file = r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\a.xlsx"
 
 
 def get_data(type_data=False):
@@ -38,6 +37,7 @@ def get_data(type_data=False):
         szjj = pd.read_excel(f, sheet_name=3)
         szjj = szjj.iloc[:-2, :]
         szjj['时间'] = szjj['时间'].map(lambda x: str(x).split(" ")[0])
+        szjj = szjj.iloc[::-1, :]
         szjj_raw = deepcopy(szjj)  # 备份绘图用
         # 技术指标
         jszb = pd.read_excel(f, sheet_name=4)
@@ -74,33 +74,48 @@ def get_data(type_data=False):
 def show(szjj):
     # 绘制走势图
     # 数据太大，绘图太慢
-    plt.subplot(221)
+    plt.subplot(231)
     plt.plot(szjj.iloc[:, 0], szjj.iloc[:, 4], label="收盘价", color="r")
     plt.xlabel("时间")
     plt.ylabel("价格")
     plt.title("收盘价随时间的变化走势图")
     plt.xticks([])
 
-    plt.subplot(222)
+    plt.subplot(232)
     plt.plot(szjj.iloc[:, 0], szjj.iloc[:, 3], label="开盘价", color="g")
     plt.xlabel("时间")
     plt.ylabel("价格")
     plt.title("收盘价随时间的变化走势图")
     plt.xticks([])
 
-    plt.subplot(223)
+    plt.subplot(234)
     plt.plot(szjj.iloc[:, 0], szjj.iloc[:, 5], label="最高价", color="b")
     plt.xlabel("时间")
     plt.ylabel("价格")
     plt.title("最高价随时间的变化走势图")
     plt.xticks([])
 
-    plt.subplot(224)
+    plt.subplot(235)
     plt.plot(szjj.iloc[:, 0], szjj.iloc[:, 6], label="最低价", color="y")
     plt.xlabel("时间")
     plt.ylabel("价格")
     plt.title("最低价随时间的变化走势图")
     plt.xticks([])
+
+    plt.subplot(233)
+    plt.plot(szjj.iloc[:, 0], szjj.iloc[:, 7], label="成交量", color="c")
+    plt.xlabel("时间")
+    plt.ylabel("成交量")
+    plt.title("成交量随时间的变化走势图")
+    plt.xticks([])
+
+    plt.subplot(236)
+    plt.plot(szjj.iloc[:, 0], szjj.iloc[:, 8], label="成交额", color="m")
+    plt.xlabel("时间")
+    plt.ylabel("成交额")
+    plt.title("成交额随时间的变化走势图")
+    plt.xticks([])
+
     plt.show()
 
     # plt.savefig(r"projects\python程序\数学建模\1.png")
@@ -216,18 +231,8 @@ def parse_analysis(data):
 
 
 if __name__ == "__main__":
-    data, szjj = get_data()
-    parse_analysis(data)
-    # print("分析哪些特征跟交易量最相关")
-    # X, y = get_X_y(data=data, y_type=4)
-    # feature_select(X, y)
+    data, szjj = get_data()  # 获取数据
+    # print(data.columns)
 
-    # print(data.columns.values)
-
-    # show(szjj)  # 绘图比较慢
-
-    # 先获取并清洗数据，然后有以下的步骤：
-    # 1. 来计算相关系数
-    # 2. 使用特征提取方法
-    # 3. 使用降维技术
-    pass
+    # parse_analysis(data)  # 这个用于分析相关性
+    show(szjj)  # 这个用于绘图
