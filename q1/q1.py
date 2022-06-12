@@ -15,8 +15,8 @@ from minepy import MINE
 file = r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\a.xlsx"
 
 
-def get_data(type_data=False):
-    # 获取拼接后的信息
+def get_data(type_data=False, day=True):
+    # 获取拼接后的信息，复用第一问中提取数据的代码
     with open(file, 'rb') as f:
         # 宏观指标1
         hgzb1 = pd.read_excel(f, sheet_name=0)
@@ -36,6 +36,10 @@ def get_data(type_data=False):
         # 数字经济板块
         szjj = pd.read_excel(f, sheet_name=3)
         szjj = szjj.iloc[:-2, :]
+        if day:
+            # 只提取每一天的数据
+            szjj = szjj[szjj["时间"].map(
+                lambda x: str(x).split(" ")[1] == "15:00:00")]
         szjj['时间'] = szjj['时间'].map(lambda x: str(x).split(" ")[0])
         szjj = szjj.iloc[::-1, :]
         szjj_raw = deepcopy(szjj)  # 备份绘图用
@@ -234,5 +238,5 @@ if __name__ == "__main__":
     data, szjj = get_data()  # 获取数据
     # print(data.columns)
 
-    # parse_analysis(data)  # 这个用于分析相关性
-    show(szjj)  # 这个用于绘图
+    parse_analysis(data)  # 这个用于分析相关性
+    # show(szjj)  # 这个用于绘图
