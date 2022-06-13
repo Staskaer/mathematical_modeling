@@ -1,4 +1,3 @@
-from turtle import color
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -83,8 +82,8 @@ def get_train_test(dataset):
     # 从数据集中获取训练集和交叉验证集
     # test = dataset.iloc[0:912, :]
     # train = dataset.iloc[912:, :]
-    test = dataset.iloc[0:19, :]
-    train = dataset.iloc[19:, :]
+    train = dataset.iloc[0:-19, :]
+    test = dataset.iloc[-19:, :]
 
     trainX = train[best[0:10]]
     trainY = train[y]
@@ -99,14 +98,15 @@ def train_and_save(dataset):
     trainX, trainY, testX, testY = get_train_test(dataset)
     scaler = MinMaxScaler()
     trainX = scaler.fit_transform(trainX)
-    trainY = np.array(trainY)
+    trainY = scaler.fit_transform(np.array(trainY).reshape(-1, 1))
 
     x_train, y_train = [], []
-    for i in range(1, trainX.shape[0]):
-        x_train.append(trainX[i-1:i, :])
+    for i in range(5, trainX.shape[0]):
+        x_train.append(trainX[i-5:i, :])
         y_train.append(trainY[i])
     x_train, y_train = np.array(x_train), np.array(y_train)
-    x_train = x_train.reshape((x_train.shape[0], 1, 10))
+    x_train = x_train.reshape((x_train.shape[0], 5, 10))
+    y_train = y_train.reshape(y_train.shape[0], 1)
 
     # 对矩阵reshape成[samples, time steps, features]
     # trainX = np.array(trainX)
@@ -114,19 +114,20 @@ def train_and_save(dataset):
 
     # LSTM网络模型
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=False))
+    model.add(LSTM(units=100, return_sequences=False))
     model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
     model.fit(x_train, y_train, epochs=100, batch_size=1, verbose=2)
 
-    model.save(r"projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
+    model.save(
+        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
 
 
 def test(dataset):
     # 使用训练好的模型进行预测，因为训练模型需要很长时间
     model = load_model(
-        r"projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
+        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
     trainX, trainY, testX, testY = get_train_test(dataset)
     # 上面这一堆是对数据进行处理，忘了封装了，只能这样子单独处理了
     X_all = pd.concat((trainX, testX), axis=0)
@@ -144,18 +145,18 @@ def test(dataset):
     # testX = testX.reshape((testX.shape[0], 1, testX.shape[1]))
     # trainX = np.array(trainX)
     # trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
-    for i in range(1, X_all.shape[0]):
-        x_test.append(X_all[i-1:i, :])
+    for i in range(5, X_all.shape[0]):
+        x_test.append(X_all[i-5:i, :])
         y_test.append(Y_all[i])
     x_test, y_test = np.array(x_test), np.array(y_test)
-    x_test = x_test.reshape((x_test.shape[0], 1, 10))
+    # x_test = x_test.reshape((x_test.shape[0], 5, 10))
 
     # 预测
     trainPredict = model.predict(x_test)
-    real_price = y_test
+    real_price = scaler.fit_transform(np.array(y_test).reshape(-1, 1))
 
-    plt.plot(trainPredict, color="r")
-    plt.plot(real_price, color="g")
+    plt.plot(trainPredict, color="r", label="train")
+    plt.plot(real_price, color="g", label="raw")
     plt.show()
 
     # trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
@@ -185,7 +186,7 @@ if __name__ == "__main__":
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    train_and_save(dataset)  # 训练模型并保存
+    # train_and_save(dataset)  # 训练模型并保存
     test(dataset)  # 验证
 
     # 获取数据集和验证集
