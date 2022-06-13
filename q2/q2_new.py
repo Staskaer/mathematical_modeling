@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import math
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM, Dropout
@@ -10,12 +9,14 @@ from keras.models import load_model
 from sklearn.metrics import mean_squared_error
 from functools import reduce
 from copy import deepcopy
+import pickle
 
-file = r"projects\python程序\数学建模\mathematical_modeling\a.xlsx"
+file = r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\a.xlsx"
 # 基于皮尔逊相关系数
 best = ['VMA', 'VMACD', '成交金额:上证综合指数', '互联网电商', '创业板指数', '沪深300指数', 'EXPMA',
         '成交量:上证综合指数', 'MA', 'BBI', '深证成份指数', '恒生指数', '俄罗斯RTS指数', 'BIAS', 'BOLL']
 y = "成交量"
+lookback = 20
 
 
 def get_data(type_data=False, day=True):
@@ -80,10 +81,10 @@ def get_data(type_data=False, day=True):
 
 def get_train_test(dataset):
     # 从数据集中获取训练集和交叉验证集
-    # test = dataset.iloc[0:912, :]
-    # train = dataset.iloc[912:, :]
-    test = dataset.iloc[0:-19, :]
-    train = dataset.iloc[-19:, :]
+    test = dataset.iloc[-912:, :]
+    train = dataset.iloc[:-912, :]
+    # train = dataset.iloc[0:-19, :]
+    # test = dataset.iloc[-19:, :]
 
     trainX = train[best[0:10]]
     trainY = train[y]
@@ -96,18 +97,53 @@ def get_train_test(dataset):
 def train_and_save(dataset):
 
     trainX, trainY, testX, testY = get_train_test(dataset)
+    X_all = pd.concat((trainX, testX), axis=0)
+    Y_all = pd.concat((trainY, testY), axis=0)
+    X_all, Y_all = np.array(X_all), np.array(Y_all)
     scaler = MinMaxScaler()
-    trainX = scaler.fit_transform(trainX)
-    trainY = np.array(trainY)
+    trainX = scaler.fit_transform(X_all)
+    trainY = scaler.fit_transform(np.array(Y_all).reshape(-1, 1))
 
+    x_train, y_train = [], []
+    for i in range(lookback, trainX.shape[0]):
+        x_train.append(trainX[i-lookback:i, :])
+        y_train.append(trainY[i])
+    x_train, y_train = np.array(x_train), np.array(y_train)
+    x_train = x_train.reshape((x_train.shape[0], lookback, 10))
+    y_train = y_train.reshape(y_train.shape[0], 1)
+
+    # 对矩阵reshape成[samples, time steps, features]
+    # trainX = np.array(trainX)
+    # trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
+
+    # LSTM网络模型
     model = Sequential()
-    model.add(Dense(2))
+    model.add(LSTM(units=50, return_sequences=True))
+    model.add(LSTM(units=100, return_sequences=False))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=1))
+    model.compile(optimizer='adam', loss='mae')
+    history = model.fit(x_train, y_train, epochs=150, batch_size=16, verbose=2)
+    model.save(
+        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\w.h5")
+    # model.save(
+    #     r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
+
+    # plt.title("训练损失图")
+    # plt.plot(history.history['loss'])
+    # plt.ylabel('Loss')
+    # plt.xlabel('Epoch')
+    # plt.show()
+    with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\history", "wb") as f:
+        pickle.dump(history.history, f)
 
 
 def test(dataset):
-    # 使用训练好的模型进行预测，因为训练模型需要很长时间
     model = load_model(
-        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
+        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\w.h5")
+    # 使用训练好的模型进行预测，因为训练模型需要很长时间
+    # model = load_model(
+    #     r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
     trainX, trainY, testX, testY = get_train_test(dataset)
     # 上面这一堆是对数据进行处理，忘了封装了，只能这样子单独处理了
     X_all = pd.concat((trainX, testX), axis=0)
@@ -125,48 +161,56 @@ def test(dataset):
     # testX = testX.reshape((testX.shape[0], 1, testX.shape[1]))
     # trainX = np.array(trainX)
     # trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
-    for i in range(5, X_all.shape[0]):
-        x_test.append(X_all[i-5:i, :])
+    for i in range(lookback, X_all.shape[0]):
+        x_test.append(X_all[i-lookback:i, :])
         y_test.append(Y_all[i])
     x_test, y_test = np.array(x_test), np.array(y_test)
     # x_test = x_test.reshape((x_test.shape[0], 5, 10))
 
     # 预测
     trainPredict = model.predict(x_test)
-    real_price = y_test
+    real_price = scaler.fit_transform(np.array(y_test).reshape(-1, 1))
 
-    plt.plot(trainPredict, color="r")
-    plt.plot(real_price, color="g")
+    with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\history", "rb") as f:
+        history = pickle.load(f)
+
+    plt.subplot(221)
+    plt.plot(real_price, color="g", label="raw")
+    plt.plot(trainPredict, color="r", label="predicted")
+    plt.legend(["raw", "predicted"])
+    plt.title("预测与真实数据对比")
+    plt.xlabel("时间")
+
+    plt.subplot(223)
+    plt.title("训练损失图")
+    plt.plot(history['loss'])
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+
+    plt.subplot(222)
+    plt.plot(real_price, color="g", label="raw")
+    plt.legend(["raw"])
+    plt.title("真实数据")
+    plt.xlabel("时间")
+
+    plt.subplot(224)
+    plt.plot(trainPredict, color="r", label="predicted")
+    plt.legend(["predicted"])
+    plt.title("预测值")
+    plt.xlabel("时间")
+
     plt.show()
-
-    # trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
-    # print('Train Score: %.2f RMSE'.format(trainScore))
-    # testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
-    # print('Test Score: %.2f RMSE'.format(testScore))
-    # shift train predictions for plotting
-    # trainPredictPlot = np.empty_like(dataset)
-    # trainPredictPlot[:, :] = np.nan
-    # trainPredictPlot[1:len(trainPredict)+1, :] = trainPredict
-    # shift test predictions for plotting
-    # testPredictPlot = np.empty_like(dataset)
-    # testPredictPlot[:, :] = np.nan
-    # testPredictPlot[len(trainPredict)+(1*2) +
-    #                 1:len(dataset)-1, :] = testPredict
-    # plot baseline and predictions
-    # plt.plot(scaler.inverse_transform(dataset))
-    # plt.plot(trainPredictPlot, color="r")
-    # # plt.plot(testPredictPlot, color="g")
-    # plt.show()
 
 
 if __name__ == "__main__":
 
     # 获取数据然后归一化
-    dataset, _ = get_data()
+    dataset, _ = get_data(day=False)
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    train_and_save(dataset)  # 训练模型并保存
-    test(dataset)  # 验证
+    train_and_save(dataset)  # 训练模型并验证
+    test(dataset)
+    # 不知道怎么回事，模型保存再打开就会报错
 
     # 获取数据集和验证集
