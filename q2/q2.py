@@ -96,9 +96,12 @@ def get_train_test(dataset):
 def train_and_save(dataset):
 
     trainX, trainY, testX, testY = get_train_test(dataset)
+    X_all = pd.concat((trainX, testX), axis=0)
+    Y_all = pd.concat((trainY, testY), axis=0)
+    X_all, Y_all = np.array(X_all), np.array(Y_all)
     scaler = MinMaxScaler()
-    trainX = scaler.fit_transform(trainX)
-    trainY = scaler.fit_transform(np.array(trainY).reshape(-1, 1))
+    trainX = scaler.fit_transform(X_all)[:-19, :]
+    trainY = scaler.fit_transform(np.array(Y_all).reshape(-1, 1))[:-19, :]
 
     x_train, y_train = [], []
     for i in range(5, trainX.shape[0]):
@@ -119,7 +122,7 @@ def train_and_save(dataset):
     model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
-    history = model.fit(x_train, y_train, epochs=100, batch_size=1, verbose=2)
+    history = model.fit(x_train, y_train, epochs=300, batch_size=16, verbose=2)
     model.save(
         r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
     draw(history)
