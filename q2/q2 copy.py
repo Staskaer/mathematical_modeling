@@ -82,8 +82,8 @@ def get_train_test(dataset):
     # 从数据集中获取训练集和交叉验证集
     # test = dataset.iloc[0:912, :]
     # train = dataset.iloc[912:, :]
-    train = dataset.iloc[0:-19, :]
-    test = dataset.iloc[-19:, :]
+    test = dataset.iloc[0:-19, :]
+    train = dataset.iloc[-19:, :]
 
     trainX = train[best[0:10]]
     trainY = train[y]
@@ -98,40 +98,10 @@ def train_and_save(dataset):
     trainX, trainY, testX, testY = get_train_test(dataset)
     scaler = MinMaxScaler()
     trainX = scaler.fit_transform(trainX)
-    trainY = scaler.fit_transform(np.array(trainY).reshape(-1, 1))
+    trainY = np.array(trainY)
 
-    x_train, y_train = [], []
-    for i in range(5, trainX.shape[0]):
-        x_train.append(trainX[i-5:i, :])
-        y_train.append(trainY[i])
-    x_train, y_train = np.array(x_train), np.array(y_train)
-    x_train = x_train.reshape((x_train.shape[0], 5, 10))
-    y_train = y_train.reshape(y_train.shape[0], 1)
-
-    # 对矩阵reshape成[samples, time steps, features]
-    # trainX = np.array(trainX)
-    # trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
-
-    # LSTM网络模型
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=False,
-                   input_shape=(None, 5, 10)))
-    model.add(Dropout(0.2))
-    model.add(Dense(units=1))
-    model.compile(optimizer='adam', loss='mae')
-    history = model.fit(x_train, y_train, epochs=100, batch_size=1, verbose=2)
-    model.save(
-        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
-    draw(history)
-
-
-def draw(history):
-    # 绘制损失
-    plt.plot(history.history['loss'])
-    plt.title('Model loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.show()
+    model.add(Dense(2))
 
 
 def test(dataset):
@@ -163,11 +133,30 @@ def test(dataset):
 
     # 预测
     trainPredict = model.predict(x_test)
-    real_price = scaler.fit_transform(np.array(y_test).reshape(-1, 1))
+    real_price = y_test
 
-    plt.plot(trainPredict, color="r", label="train")
-    plt.plot(real_price, color="g", label="raw")
+    plt.plot(trainPredict, color="r")
+    plt.plot(real_price, color="g")
     plt.show()
+
+    # trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:, 0]))
+    # print('Train Score: %.2f RMSE'.format(trainScore))
+    # testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:, 0]))
+    # print('Test Score: %.2f RMSE'.format(testScore))
+    # shift train predictions for plotting
+    # trainPredictPlot = np.empty_like(dataset)
+    # trainPredictPlot[:, :] = np.nan
+    # trainPredictPlot[1:len(trainPredict)+1, :] = trainPredict
+    # shift test predictions for plotting
+    # testPredictPlot = np.empty_like(dataset)
+    # testPredictPlot[:, :] = np.nan
+    # testPredictPlot[len(trainPredict)+(1*2) +
+    #                 1:len(dataset)-1, :] = testPredict
+    # plot baseline and predictions
+    # plt.plot(scaler.inverse_transform(dataset))
+    # plt.plot(trainPredictPlot, color="r")
+    # # plt.plot(testPredictPlot, color="g")
+    # plt.show()
 
 
 if __name__ == "__main__":
