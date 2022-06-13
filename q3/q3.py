@@ -10,11 +10,11 @@ from sklearn.metrics import mean_squared_error
 from functools import reduce
 from copy import deepcopy
 
-file = r"projects\python程序\数学建模\mathematical_modeling\a.xlsx"
+file = r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\a.xlsx"
 # 基于皮尔逊相关系数
-best = ['VMA', 'VMACD', '成交金额:上证综合指数', '互联网电商', '创业板指数', '沪深300指数', 'EXPMA',
-        '成交量:上证综合指数', 'MA', 'BBI', '深证成份指数', '恒生指数', '俄罗斯RTS指数', 'BIAS', 'BOLL']
-y = "成交量"
+best = ['EXPMA', 'MA', 'BBI', '深证成份指数', '创业板指数', 'OBV', '沪深300指数',
+        'MACD', 'DMA', 'BOLL', '互联网电商', 'VMA', '数字媒体', 'KDJ', '深证综合指数']
+y = "收盘价"
 
 
 def get_data(type_data=False, day=True):
@@ -116,11 +116,11 @@ def train_and_save(dataset):
 
     # LSTM网络模型
     model = Sequential()
-    model.add(LSTM(units=100, return_sequences=False))
+    model.add(LSTM(units=4, return_sequences=False))
     model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
-    history = model.fit(x_train, y_train, epochs=150, batch_size=16, verbose=2)
+    history = model.fit(x_train, y_train, epochs=120, batch_size=16, verbose=2)
     # model.save(
     #     r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
     # draw(history)
