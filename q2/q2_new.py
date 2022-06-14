@@ -118,11 +118,12 @@ def train_and_save(dataset):
 
     # LSTM网络模型
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True))
+    model.add(LSTM(units=100, return_sequences=True))
     model.add(LSTM(units=100, return_sequences=False))
-    model.add(Dropout(0.2))
+    # model.add(Dropout(0.2))
     model.add(Dense(units=32))
-    model.add(Dropout(0.2))
+    model.add(Dense(units=32))
+    # model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
     history = model.fit(x_train, y_train, epochs=150, batch_size=16, verbose=2)
