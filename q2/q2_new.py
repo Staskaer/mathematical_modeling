@@ -16,7 +16,7 @@ file = r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical
 best = ['VMA', 'VMACD', '成交金额:上证综合指数', '互联网电商', '创业板指数', '沪深300指数', 'EXPMA',
         '成交量:上证综合指数', 'MA', 'BBI', '深证成份指数', '恒生指数', '俄罗斯RTS指数', 'BIAS', 'BOLL']
 y = "成交量"
-lookback = 20
+lookback = 50
 
 
 def get_data(type_data=False, day=True):
@@ -120,6 +120,8 @@ def train_and_save(dataset):
     model = Sequential()
     model.add(LSTM(units=50, return_sequences=True))
     model.add(LSTM(units=100, return_sequences=False))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=32))
     model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')

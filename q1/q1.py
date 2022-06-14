@@ -136,7 +136,7 @@ def get_X_y(data, y_type=0):
     return X, y
 
 
-def feature_select(X, y):
+def feature_select(X, y, txt=" "):
     # 特征提取方法
     result = {}
     '''（一）卡方(Chi2)检验'''
@@ -163,6 +163,15 @@ def feature_select(X, y):
         k_best_list_k.append(k_best_feature)
     print('使用卡方检验得到的最优的15个特征：', k_best_list_k)
 
+    plt.subplot(311)
+
+    score = sorted(scores)[::-1][0:15]
+    plt.bar(k_best_list_k, score)
+    plt.title("基于{}来分析{}的最相关特征".format("卡方检验", txt))
+    plt.yticks([])
+    plt.ylabel("相关性")
+    plt.xticks(rotation=-15)
+
     '''（二）皮尔逊'''
     # 皮尔逊（这部分我看知乎里有提到，卡方对分类，皮尔逊对回归）
     # 而这个正是一个回归问题，所以把这个也用上
@@ -180,6 +189,13 @@ def feature_select(X, y):
         result[k_best_feature] = result.get(k_best_feature, 0)+15-i
         k_best_list_p.append(k_best_feature)
     print('使用皮尔逊检验得到的最优的15个特征：', k_best_list_p)
+    plt.subplot(312)
+    score = sorted(scores)[::-1][0:15]
+    plt.bar(k_best_list_p, score)
+    plt.title("基于{}来分析{}的最相关特征".format("皮尔逊检验", txt))
+    plt.yticks([])
+    plt.ylabel("相关性")
+    plt.xticks(rotation=-15)
 
     '''（三）基于互信息'''
     def mic(x, y):
@@ -201,6 +217,15 @@ def feature_select(X, y):
         result[k_best_feature] = result.get(k_best_feature, 0)+15-i
         k_best_list_h.append(k_best_feature)
     print('使用互信息得到的最优的15个特征：', k_best_list_h)
+    plt.subplot(313)
+    score = sorted(scores)[::-1][0:15]
+    plt.bar(k_best_list_h, score)
+    plt.title("基于{}来分析{}的最相关特征".format("互信息", txt))
+    plt.yticks([])
+    plt.ylabel("相关性")
+    plt.xticks(rotation=-15)
+    plt.tight_layout()
+    plt.show()
 
     print("========最终投票结果（前6）==========")
     result = sorted(result.items(), key=lambda x: x[1], reverse=True)
@@ -211,31 +236,31 @@ def feature_select(X, y):
 def parse_analysis(data):
     print("分析哪些特征跟开盘价最相关:\n")
     X, y = get_X_y(data=data, y_type=0)
-    feature_select(X, y)
+    feature_select(X, y, "开盘价")
 
     print("\n分析哪些特征跟收盘价最相关:\n")
     X, y = get_X_y(data=data, y_type=1)
-    feature_select(X, y)
+    feature_select(X, y, "收盘价")
 
     print("\n分析哪些特征跟最高价最相关:\n")
     X, y = get_X_y(data=data, y_type=2)
-    feature_select(X, y)
+    feature_select(X, y, "最高价")
 
     print("\n分析哪些特征跟最低价最相关:\n")
     X, y = get_X_y(data=data, y_type=3)
-    feature_select(X, y)
+    feature_select(X, y, "最低价")
 
     print("\n分析哪些特征跟交易量最相关:\n")
     X, y = get_X_y(data=data, y_type=4)
-    feature_select(X, y)
+    feature_select(X, y, "交易量")
 
-    print("\n分析哪些特征跟交易价最相关:\n")
+    print("\n分析哪些特征跟交易额最相关:\n")
     X, y = get_X_y(data=data, y_type=5)
-    feature_select(X, y)
+    feature_select(X, y, "交易额")
 
 
 if __name__ == "__main__":
-    data, szjj = get_data()  # 获取数据
+    data, szjj = get_data(day=False)  # 获取数据
     # print(data.columns)
 
     parse_analysis(data)  # 这个用于分析相关性
