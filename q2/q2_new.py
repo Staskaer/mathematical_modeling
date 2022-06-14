@@ -17,6 +17,8 @@ best = ['VMA', 'VMACD', '成交金额:上证综合指数', '互联网电商', '�
         '成交量:上证综合指数', 'MA', 'BBI', '深证成份指数', '恒生指数', '俄罗斯RTS指数', 'BIAS', 'BOLL']
 y = "成交量"
 lookback = 50
+max_data = 884910620
+min_data = 0
 
 
 def get_data(type_data=False, day=True):
@@ -120,13 +122,13 @@ def train_and_save(dataset):
     model = Sequential()
     model.add(LSTM(units=100, return_sequences=True))
     model.add(LSTM(units=100, return_sequences=False))
-    # model.add(Dropout(0.2))
+    model.add(Dropout(0.2))
     model.add(Dense(units=32))
     model.add(Dense(units=32))
     # model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
-    history = model.fit(x_train, y_train, epochs=150, batch_size=16, verbose=2)
+    history = model.fit(x_train, y_train, epochs=250, batch_size=32, verbose=2)
     model.save(
         r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\w.h5")
     # model.save(
@@ -174,6 +176,12 @@ def test(dataset):
     trainPredict = model.predict(x_test)
     real_price = scaler.fit_transform(np.array(y_test).reshape(-1, 1))
 
+    trainPredict = np.array(trainPredict)
+    real_price = np.array(real_price)
+
+    trainPredict = trainPredict*(max_data-min_data) + min_data
+    real_price = real_price*(max_data-min_data) + min_data
+
     with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\history", "rb") as f:
         history = pickle.load(f)
 
@@ -212,7 +220,7 @@ if __name__ == "__main__":
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    train_and_save(dataset)  # 训练模型并验证
+    # train_and_save(dataset)  # 训练模型并验证
     test(dataset)
     # 不知道怎么回事，模型保存再打开就会报错
 

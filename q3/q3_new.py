@@ -17,6 +17,8 @@ best = ['EXPMA', 'MA', 'BBI', '深证成份指数', '创业板指数', 'OBV', '�
         'MACD', 'DMA', 'BOLL', '互联网电商', 'VMA', '数字媒体', 'KDJ', '深证综合指数']
 y = "收盘价"
 lookback = 5
+max_data = 1683.5848
+min_data = 1365.188
 
 
 def get_data(type_data=False, day=True):
@@ -171,6 +173,12 @@ def test(dataset):
     trainPredict = model.predict(x_test)
     real_price = scaler.fit_transform(np.array(y_test).reshape(-1, 1))
 
+    trainPredict = np.array(trainPredict)
+    real_price = np.array(real_price)
+
+    trainPredict = trainPredict*(max_data-min_data) + min_data
+    real_price = real_price*(max_data-min_data) + min_data
+
     with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\history", "rb") as f:
         history = pickle.load(f)
 
@@ -209,7 +217,7 @@ if __name__ == "__main__":
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    train_and_save(dataset)  # 训练模型并验证
+    # train_and_save(dataset)  # 训练模型并验证
     test(dataset)
     # 不知道怎么回事，模型保存再打开就会报错
 
