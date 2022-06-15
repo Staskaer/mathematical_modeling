@@ -119,12 +119,15 @@ def train_and_save(dataset):
     # trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
 
     # LSTM网络模型
+    # 3个LSTM层，4个全连接层，拟合能力拉满
     model = Sequential()
+    model.add(LSTM(units=50, return_sequences=True))
     model.add(LSTM(units=100, return_sequences=True))
-    model.add(LSTM(units=100, return_sequences=False))
-    model.add(Dropout(0.2))
+    model.add(LSTM(units=150, return_sequences=False))
+    # model.add(Dropout(0.2))
+    model.add(Dense(units=64))
     model.add(Dense(units=32))
-    model.add(Dense(units=32))
+    model.add(Dense(units=16))
     # model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
@@ -220,7 +223,7 @@ if __name__ == "__main__":
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    # train_and_save(dataset)  # 训练模型并验证
+    train_and_save(dataset)  # 训练模型并验证
     test(dataset)
     # 不知道怎么回事，模型保存再打开就会报错
 
