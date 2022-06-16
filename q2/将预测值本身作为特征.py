@@ -13,12 +13,12 @@ import pickle
 
 file = r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\a.xlsx"
 # 基于皮尔逊相关系数
-best = ['EXPMA', 'MA', 'BBI', '深证成份指数', '创业板指数', 'OBV', '沪深300指数',
-        'MACD', 'DMA', 'BOLL', '互联网电商', 'VMA', '数字媒体', 'KDJ', '深证综合指数']
-y = "收盘价"
-lookback = 5
-max_data = 1683.5848
-min_data = 1365.188
+best = ['VMA', 'VMACD', '成交金额:上证综合指数', '互联网电商', '创业板指数', '沪深300指数', 'EXPMA',
+        '成交量:上证综合指数', 'MA', 'BBI', '深证成份指数', '恒生指数', '俄罗斯RTS指数', 'BIAS', 'BOLL']
+y = "成交量"
+lookback = 50
+max_data = 884910620
+min_data = 0
 
 
 def get_data(type_data=False, day=True):
@@ -101,12 +101,9 @@ def train_and_save(dataset):
     trainX, trainY, testX, testY = get_train_test(dataset)
     X_all = pd.concat((trainX, testX), axis=0)
     Y_all = pd.concat((trainY, testY), axis=0)
-
-    # 新增
     X_all = pd.concat((X_all, Y_all), axis=1)
-    # print(X_all)
-
     X_all, Y_all = np.array(X_all), np.array(Y_all)
+
     scaler = MinMaxScaler()
     trainX = scaler.fit_transform(X_all)
     trainY = scaler.fit_transform(np.array(Y_all).reshape(-1, 1))
@@ -124,15 +121,21 @@ def train_and_save(dataset):
     # trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
 
     # LSTM网络模型
+    # 3个LSTM层，4个全连接层，拟合能力拉满
     model = Sequential()
     model.add(LSTM(units=50, return_sequences=True))
+    # model.add(LSTM(units=100, return_sequences=True))
     model.add(LSTM(units=100, return_sequences=False))
     model.add(Dropout(0.2))
+    # model.add(Dense(units=64))
+    # model.add(Dense(units=32))
+    # model.add(Dense(units=16))
+    # model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
-    history = model.fit(x_train, y_train, epochs=150, batch_size=16, verbose=2)
+    history = model.fit(x_train, y_train, epochs=250, batch_size=32, verbose=2)
     model.save(
-        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\w.h5")
+        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\w.h5")
     # model.save(
     #     r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
 
@@ -141,13 +144,13 @@ def train_and_save(dataset):
     # plt.ylabel('Loss')
     # plt.xlabel('Epoch')
     # plt.show()
-    with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\history", "wb") as f:
+    with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\history", "wb") as f:
         pickle.dump(history.history, f)
 
 
 def test(dataset):
     model = load_model(
-        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\w.h5")
+        r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\w.h5")
     # 使用训练好的模型进行预测，因为训练模型需要很长时间
     # model = load_model(
     #     r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\model.h5")
@@ -155,9 +158,7 @@ def test(dataset):
     # 上面这一堆是对数据进行处理，忘了封装了，只能这样子单独处理了
     X_all = pd.concat((trainX, testX), axis=0)
     Y_all = pd.concat((trainY, testY), axis=0)
-    X_all = pd.concat((X_all, Y_all), axis=1)
     X_all, Y_all = np.array(X_all), np.array(Y_all)
-
     # X_all = X_all[len(X_all) - len(testY) - 1:]
     # Y_all = Y_all[len(X_all) - len(testY) - 1:]
     x_test, y_test = [], []
@@ -186,11 +187,8 @@ def test(dataset):
     trainPredict = trainPredict*(max_data-min_data) + min_data
     real_price = real_price*(max_data-min_data) + min_data
 
-    with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\history", "rb") as f:
+    with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\history", "rb") as f:
         history = pickle.load(f)
-
-    pd.DataFrame(trainPredict).to_csv(
-        r'D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\predict.csv')
 
     plt.subplot(221)
     plt.plot(real_price, color="g", label="raw")
@@ -227,7 +225,7 @@ if __name__ == "__main__":
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    # train_and_save(dataset)  # 训练模型并验证
+    train_and_save(dataset)  # 训练模型并验证
     test(dataset)
     # 不知道怎么回事，模型保存再打开就会报错
 

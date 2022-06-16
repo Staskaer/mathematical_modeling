@@ -102,6 +102,7 @@ def train_and_save(dataset):
     X_all = pd.concat((trainX, testX), axis=0)
     Y_all = pd.concat((trainY, testY), axis=0)
     X_all, Y_all = np.array(X_all), np.array(Y_all)
+
     scaler = MinMaxScaler()
     trainX = scaler.fit_transform(X_all)
     trainY = scaler.fit_transform(np.array(Y_all).reshape(-1, 1))
