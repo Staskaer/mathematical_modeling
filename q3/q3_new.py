@@ -155,7 +155,7 @@ def test(dataset):
     # 上面这一堆是对数据进行处理，忘了封装了，只能这样子单独处理了
     X_all = pd.concat((trainX, testX), axis=0)
     Y_all = pd.concat((trainY, testY), axis=0)
-    X_all = pd.concat((X_all, Y_all), axis=1)
+    # X_all = pd.concat((X_all, Y_all), axis=1)
     X_all, Y_all = np.array(X_all), np.array(Y_all)
 
     # X_all = X_all[len(X_all) - len(testY) - 1:]
@@ -186,18 +186,26 @@ def test(dataset):
     trainPredict = trainPredict*(max_data-min_data) + min_data
     real_price = real_price*(max_data-min_data) + min_data
 
+    print("模型的误差为")
+    print(np.sum(np.abs((trainPredict-real_price)/np.sum(real_price))))
+
     with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\history", "rb") as f:
         history = pickle.load(f)
 
     pd.DataFrame(trainPredict).to_csv(
         r'D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q3\predict.csv')
 
+    fuzhu = np.full((6190, 1), np.min(real_price))
+    fuzhu[5278] = np.max(real_price+20)
     plt.subplot(221)
     plt.plot(real_price, color="g", label="raw")
     plt.plot(trainPredict, color="r", label="predicted")
+    plt.plot(fuzhu, color="b")
     plt.legend(["raw", "predicted"])
     plt.title("预测与真实数据对比")
     plt.xlabel("时间")
+    plt.text(3000, max_data*0.8, "训练集部分")
+    plt.text(5500, max_data*0.8, "测试集部分")
 
     plt.subplot(223)
     plt.title("训练损失图")
@@ -207,16 +215,22 @@ def test(dataset):
 
     plt.subplot(222)
     plt.plot(real_price, color="g", label="raw")
+    plt.plot(fuzhu, color="b")
     plt.legend(["raw"])
     plt.title("真实数据")
     plt.xlabel("时间")
+    plt.text(3000, max_data*0.8, "训练集部分")
+    plt.text(5500, max_data*0.8, "测试集部分")
 
     plt.subplot(224)
     plt.plot(trainPredict, color="r", label="predicted")
+    plt.plot(fuzhu, color="b")
     plt.legend(["predicted"])
     plt.title("预测值")
     plt.xlabel("时间")
 
+    plt.text(3000, np.max(trainPredict)*0.8, "训练集部分")
+    plt.text(5500, np.max(trainPredict)*0.8, "测试集部分")
     plt.show()
 
 

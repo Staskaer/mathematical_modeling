@@ -190,8 +190,10 @@ def test(dataset):
         history = pickle.load(f)
 
     plt.subplot(221)
-    plt.plot(real_price, color="g", label="raw")
-    plt.plot(trainPredict, color="r", label="predicted")
+    plt.plot(real_price[:-912], color="g", label="raw")
+    plt.plot(trainPredict[:-912], color="r", label="predicted")
+    plt.plot(real_price[-912:], color="g", label="raw", linestyle='--')
+    plt.plot(trainPredict[-912:], color="r", label="predicted", linestyle='--')
     plt.legend(["raw", "predicted"])
     plt.title("预测与真实数据对比")
     plt.xlabel("时间")
@@ -203,13 +205,15 @@ def test(dataset):
     plt.xlabel('Epoch')
 
     plt.subplot(222)
-    plt.plot(real_price, color="g", label="raw")
+    plt.plot(real_price[:-912], color="g", label="raw")
+    plt.plot(real_price[-912:], color="g", label="raw", linestyle='--')
     plt.legend(["raw"])
     plt.title("真实数据")
     plt.xlabel("时间")
 
     plt.subplot(224)
-    plt.plot(trainPredict, color="r", label="predicted")
+    plt.plot(trainPredict[:-912], color="r", label="predicted")
+    plt.plot(trainPredict[-912:], color="r", label="predicted", linestyle='--')
     plt.legend(["predicted"])
     plt.title("预测值")
     plt.xlabel("时间")
@@ -224,7 +228,7 @@ if __name__ == "__main__":
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    train_and_save(dataset)  # 训练模型并验证
+    # train_and_save(dataset)  # 训练模型并验证
     test(dataset)
     # 不知道怎么回事，模型保存再打开就会报错
 

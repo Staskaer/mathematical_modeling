@@ -1,3 +1,4 @@
+from turtle import color
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -121,19 +122,21 @@ def train_and_save(dataset):
     # trainX = trainX.reshape((trainX.shape[0], 1, trainX.shape[1]))
 
     # LSTM网络模型
-    # 3个LSTM层，4个全连接层，拟合能力拉满
+    # 2个lstm层，然后经过一个全连接层加权在整合到另一个全连接层输出
     model = Sequential()
     model.add(LSTM(units=50, return_sequences=True))
-    # model.add(LSTM(units=100, return_sequences=True))
+    model.add(LSTM(units=100, return_sequences=True))
     model.add(LSTM(units=100, return_sequences=False))
     model.add(Dropout(0.2))
-    # model.add(Dense(units=64))
-    # model.add(Dense(units=32))
-    # model.add(Dense(units=16))
-    # model.add(Dropout(0.2))
+    model.add(Dense(units=64))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=32))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=16))
+    model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mae')
-    history = model.fit(x_train, y_train, epochs=250, batch_size=32, verbose=2)
+    history = model.fit(x_train, y_train, epochs=150, batch_size=16, verbose=2)
     model.save(
         r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\w.h5")
     # model.save(
@@ -158,6 +161,7 @@ def test(dataset):
     # 上面这一堆是对数据进行处理，忘了封装了，只能这样子单独处理了
     X_all = pd.concat((trainX, testX), axis=0)
     Y_all = pd.concat((trainY, testY), axis=0)
+    # X_all = pd.concat((X_all, Y_all), axis=1)
     X_all, Y_all = np.array(X_all), np.array(Y_all)
     # X_all = X_all[len(X_all) - len(testY) - 1:]
     # Y_all = Y_all[len(X_all) - len(testY) - 1:]
@@ -187,15 +191,23 @@ def test(dataset):
     trainPredict = trainPredict*(max_data-min_data) + min_data
     real_price = real_price*(max_data-min_data) + min_data
 
+    print("模型的误差为")
+    print(np.sum(np.abs((trainPredict-real_price)/np.sum(real_price))))
+
     with open(r"D:\vs_code_files\python\projects\python程序\数学建模\mathematical_modeling\q2\history", "rb") as f:
         history = pickle.load(f)
 
+    fuzhu = np.zeros((6190, 1))
+    fuzhu[5278] = 1.5*max_data
     plt.subplot(221)
     plt.plot(real_price, color="g", label="raw")
     plt.plot(trainPredict, color="r", label="predicted")
+    plt.plot(fuzhu, color="b")
     plt.legend(["raw", "predicted"])
     plt.title("预测与真实数据对比")
     plt.xlabel("时间")
+    plt.text(3000, max_data*0.8, "训练集部分")
+    plt.text(5500, max_data*0.8, "测试集部分")
 
     plt.subplot(223)
     plt.title("训练损失图")
@@ -205,16 +217,22 @@ def test(dataset):
 
     plt.subplot(222)
     plt.plot(real_price, color="g", label="raw")
+    plt.plot(fuzhu, color="b")
     plt.legend(["raw"])
     plt.title("真实数据")
     plt.xlabel("时间")
+    plt.text(3000, max_data*0.8, "训练集部分")
+    plt.text(5500, max_data*0.8, "测试集部分")
 
     plt.subplot(224)
     plt.plot(trainPredict, color="r", label="predicted")
+    plt.plot(fuzhu, color="b")
     plt.legend(["predicted"])
     plt.title("预测值")
     plt.xlabel("时间")
 
+    plt.text(3000, np.max(trainPredict)*0.8, "训练集部分")
+    plt.text(5500, np.max(trainPredict)*0.8, "测试集部分")
     plt.show()
 
 
@@ -225,7 +243,7 @@ if __name__ == "__main__":
     dataset = dataset.drop(columns="时间")
     dataset = dataset.astype("float32")
 
-    train_and_save(dataset)  # 训练模型并验证
+    # train_and_save(dataset)  # 训练模型并验证
     test(dataset)
     # 不知道怎么回事，模型保存再打开就会报错
 

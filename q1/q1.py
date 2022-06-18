@@ -172,31 +172,6 @@ def feature_select(X, y, txt=" "):
     plt.ylabel("相关性")
     plt.xticks(rotation=-15)
 
-    '''（二）皮尔逊'''
-    # 皮尔逊（这部分我看知乎里有提到，卡方对分类，皮尔逊对回归）
-    # 而这个正是一个回归问题，所以把这个也用上
-
-    selector = SelectKBest(lambda X, Y: np.array(
-        list(map(lambda x: pearsonr(x, Y), X.T))).T[0], k=15)
-    X_new = selector.fit_transform(X, y.astype('int'))
-
-    # 下面的部分是显示这些特征对应的类别
-    scores = selector.scores_
-    indices = np.argsort(scores)[::-1]
-    k_best_list_p = []
-    for i in range(15):
-        k_best_feature = raw.columns[indices[i]]
-        result[k_best_feature] = result.get(k_best_feature, 0)+15-i
-        k_best_list_p.append(k_best_feature)
-    print('使用皮尔逊检验得到的最优的15个特征：', k_best_list_p)
-    plt.subplot(312)
-    score = sorted(scores)[::-1][0:15]
-    plt.bar(k_best_list_p, score)
-    plt.title("基于{}来分析{}的最相关特征".format("皮尔逊检验", txt))
-    plt.yticks([])
-    plt.ylabel("相关性")
-    plt.xticks(rotation=-15)
-
     '''（三）基于互信息'''
     def mic(x, y):
         # 计算函数
@@ -217,10 +192,35 @@ def feature_select(X, y, txt=" "):
         result[k_best_feature] = result.get(k_best_feature, 0)+15-i
         k_best_list_h.append(k_best_feature)
     print('使用互信息得到的最优的15个特征：', k_best_list_h)
-    plt.subplot(313)
+    plt.subplot(312)
     score = sorted(scores)[::-1][0:15]
     plt.bar(k_best_list_h, score)
     plt.title("基于{}来分析{}的最相关特征".format("互信息", txt))
+    plt.yticks([])
+    plt.ylabel("相关性")
+    plt.xticks(rotation=-15)
+
+    '''（二）皮尔逊'''
+    # 皮尔逊（这部分我看知乎里有提到，卡方对分类，皮尔逊对回归）
+    # 而这个正是一个回归问题，所以把这个也用上
+
+    selector = SelectKBest(lambda X, Y: np.array(
+        list(map(lambda x: pearsonr(x, Y), X.T))).T[0], k=15)
+    X_new = selector.fit_transform(X, y.astype('int'))
+
+    # 下面的部分是显示这些特征对应的类别
+    scores = selector.scores_
+    indices = np.argsort(scores)[::-1]
+    k_best_list_p = []
+    for i in range(15):
+        k_best_feature = raw.columns[indices[i]]
+        result[k_best_feature] = result.get(k_best_feature, 0)+15-i
+        k_best_list_p.append(k_best_feature)
+    print('使用皮尔逊检验得到的最优的15个特征：', k_best_list_p)
+    plt.subplot(313)
+    score = sorted(scores)[::-1][0:15]
+    plt.bar(k_best_list_p, score)
+    plt.title("基于{}来分析{}的最相关特征".format("皮尔逊检验", txt))
     plt.yticks([])
     plt.ylabel("相关性")
     plt.xticks(rotation=-15)
@@ -263,5 +263,5 @@ if __name__ == "__main__":
     data, szjj = get_data(day=False)  # 获取数据
     # print(data.columns)
 
-    parse_analysis(data)  # 这个用于分析相关性
+    # parse_analysis(data)  # 这个用于分析相关性
     # show(szjj)  # 这个用于绘图

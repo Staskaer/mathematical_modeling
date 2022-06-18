@@ -67,6 +67,7 @@ class my_strategy1(bt.Strategy):
         # 指定价格序列
         self.dataclose = self.datas[0].close
         # 初始化交易指令、买卖价格和手续费
+
         self.order = None
         self.buyprice = None
         self.buycomm = None
